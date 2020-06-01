@@ -1,0 +1,27 @@
+---
+
+- name: "Create Directories"
+  file:
+    state: "directory"
+    path: "/etc/sysconfig"
+  tags:
+    - "cfssl"
+
+- name: "Apply Templates"
+  template:
+    dest: "/etc/sysconfig/cfssl@{{ item.fqdn }}.env"
+    src:  "cfssl@.env.j2"
+  with_items: "{{ cfssl | default([]) }}"
+  notify: "cfssl-restart"
+  tags:
+    - "cfssl"
+
+- name: "Start and Enable Services"
+  service:
+    name:          "cfssl@{{ item.fqdn }}.service"
+    enabled:       "yes"
+    state:         "started"
+    daemon_reload: "yes"
+  with_items: "{{ cfssl | default([]) }}"
+  tags:
+    - "cfssl"
